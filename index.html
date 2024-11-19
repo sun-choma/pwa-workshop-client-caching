@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PWA Workshop</title>
+</head>
+<body>
+<h2>Client messaging | クライアント・メッセージング</h2>
+<p>
+    This demo provides example of "client — service worker" communication.<br/>
+    In the left section you can input url and data to be saved to cache.<br/>
+    This data is being sent to Service Worker via <code>postMessage</code>.<br/>
+    In the right section you can make fetch requests.<br/>
+    If you request url that was already cached via left inputs, you'll get cached content.
+</p>
+<p>
+    このデモでは、「クライアント - サービスワーカー」通信の例を提供します。<br/>
+    左のセクションでは、urlとキャッシュに保存するデータを入力できます。<br/>
+    このデータは<code>postMessage</code>経由でサービスワーカーに送信されます。<br/>
+    右側のセクションでは、フェッチリクエストを行うことができます。<br/>
+    左の入力ですでにキャッシュされているURLをリクエストすると、キャッシュされたコンテンツを取得できます。
+</p>
+
+<div style="display: flex; gap: 5rem">
+    <div style="display:flex; flex-direction:column; gap:0.5rem; max-width:20rem">
+        <h3>Message from client<br/>クライアントからの送信</h3>
+        <div style="display: flex;flex-direction: column">
+            <label for="client-url-input"><b>Url</b></label>
+            <input id="client-url-input" placeholder="www.example.com"/>
+        </div>
+
+        <div style="display: flex;flex-direction: column">
+            <label for="client-content-input"><b>Content</b></label>
+            <textarea id="client-content-input" placeholder="Hello, world!"></textarea>
+        </div>
+        <button onclick="sendMessage()">Send | 送信</button>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:0.5rem; max-width:20rem">
+        <h3>Fetch from worker<br/>ワーカーのフェッチ<br/></h3>
+        <div style="display: flex;flex-direction: column">
+            <label for="worker-url-input"><b>Url</b></label>
+            <input id="worker-url-input" placeholder="www.example.com"/>
+        </div>
+        <button onclick="doFetch()">Fetch | フェッチ</button>
+    </div>
+</div>
+<script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/pwa-workshop-client-caching/sw.js");
+        navigator.serviceWorker.addEventListener("message", (event) => {
+            alert(`Message from worker | ワーカーからのメッセージ: ${event.data}`)
+        })
+    }
+
+    function sendMessage() {
+        const urlInput = document.getElementById("client-url-input");
+        const contentInput = document.getElementById("client-content-input");
+
+        if (urlInput.value.length && contentInput.value.length) {
+            navigator.serviceWorker.controller.postMessage({url: urlInput.value, content: contentInput.value})
+        } else {
+            alert("Input url and content to send. 送信するURLと内容を入力してください。")
+        }
+    }
+
+    function doFetch() {
+        const urlInput = document.getElementById("worker-url-input");
+        if (urlInput.value.length > 0) fetch(urlInput.value).then(response => response.json().then((json) => {
+            alert(`Fetch result | フェッチの結果: ${JSON.stringify(json, null, 2)}`)
+        })).catch((err) => alert(`Fetch failed | フェッチの失敗: ${err.message}`))
+    }
+</script>
+</body>
+</html>
